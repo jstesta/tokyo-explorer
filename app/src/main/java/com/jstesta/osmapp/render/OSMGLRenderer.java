@@ -6,7 +6,9 @@ import android.opengl.Matrix;
 import android.util.Log;
 
 import com.jstesta.osmapp.data.elevation.HGTMap;
-import com.jstesta.osmapp.render.terrain.SimpleMesh;
+import com.jstesta.osmapp.render.terrain.TerrainRenderer;
+
+import java.util.HashMap;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -21,8 +23,8 @@ public class OSMGLRenderer implements GLSurfaceView.Renderer {
     private static final String TAG = OSMGLRenderer.class.getName();
 
     private HGTMap map;
-    private SimpleMesh mesh;
     private Camera camera;
+    private TerrainRenderer terrainRenderer;
 
     // mMVPMatrix is an abbreviation for "Model View Projection Matrix"
     private final float[] mMVPMatrix = new float[16];
@@ -30,6 +32,7 @@ public class OSMGLRenderer implements GLSurfaceView.Renderer {
     public OSMGLRenderer(Camera camera, HGTMap map) {
         this.camera = camera;
         this.map = map;
+        this.terrainRenderer = new TerrainRenderer(map);
     }
 
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
@@ -39,7 +42,7 @@ public class OSMGLRenderer implements GLSurfaceView.Renderer {
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         GLES20.glDepthFunc(GLES20.GL_LEQUAL);
 
-        mesh = new SimpleMesh(map, 10);
+        terrainRenderer.initializeOpenGL();
     }
 
     public void onDrawFrame(GL10 unused) {
@@ -47,6 +50,12 @@ public class OSMGLRenderer implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
         camera.update();
+
+        HashMap<Integer, Boolean> matrix = new HashMap<>();
+        QuadTree quadTree = new QuadTree(map, map.getAABB());
+//        quadTree.subdivide(matrix, camera, 8, 1);
+        quadTree.subdivide(matrix, camera, 4, 1);
+        terrainRenderer.setQuadTreeMatrix(matrix);
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, camera.getProjectionMatrix(), 0, camera.getViewMatrix(), 0);
@@ -56,7 +65,7 @@ public class OSMGLRenderer implements GLSurfaceView.Renderer {
         // for the matrix multiplication product to be correct.
         Matrix.multiplyMM(mMVPMatrix, 0, mMVPMatrix, 0, camera.getRotationMatrix(), 0);
 
-        mesh.draw(mMVPMatrix);
+        terrainRenderer.draw(mMVPMatrix);
     }
 
     public void onSurfaceChanged(GL10 unused, int width, int height) {
@@ -82,10 +91,13 @@ public class OSMGLRenderer implements GLSurfaceView.Renderer {
         // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
         // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
         int shader = GLES20.glCreateShader(type);
+        checkGlError("glCreateShader");
 
         // add the source code to the shader and compile it
         GLES20.glShaderSource(shader, shaderCode);
+        checkGlError("glShaderSource");
         GLES20.glCompileShader(shader);
+        checkGlError("glCompileShader");
 
         return shader;
     }

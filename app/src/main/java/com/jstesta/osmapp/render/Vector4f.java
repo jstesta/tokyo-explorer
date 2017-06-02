@@ -1,4 +1,4 @@
-package com.jstesta.osmapp.util;
+package com.jstesta.osmapp.render;
 
 import java.util.Arrays;
 

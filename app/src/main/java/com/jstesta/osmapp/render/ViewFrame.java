@@ -1,7 +1,5 @@
 package com.jstesta.osmapp.render;
 
-import com.jstesta.osmapp.util.Vector4f;
-
 /**
  * Created by joseph.testa on 5/19/2017.
  */

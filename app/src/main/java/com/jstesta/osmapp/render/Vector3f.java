@@ -1,4 +1,4 @@
-package com.jstesta.osmapp.util;
+package com.jstesta.osmapp.render;
 
 import java.util.Arrays;
 
@@ -54,5 +54,19 @@ public class Vector3f {
         return "Vector3f{" +
                 "vector=" + Arrays.toString(vector) +
                 '}';
+    }
+
+    public static float distanceBetween(Vector3f a, Vector3f b) {
+        float dX = a.getX() - b.getX();
+        float dY = a.getY() - b.getY();
+        float dZ = a.getZ() - b.getZ();
+
+        return (float) Math.sqrt(dX * dX + dY * dY + dZ * dZ);
+    }
+
+    public void scale(float factor) {
+        vector[0] *= factor;
+        vector[1] *= factor;
+        vector[2] *= factor;
     }
 }

@@ -2,15 +2,10 @@ package com.jstesta.osmapp.render;
 
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
-import android.util.Log;
-import android.view.MotionEvent;
-
-import com.jstesta.osmapp.util.Vector3f;
 
 /**
  * Created by joseph.testa on 5/19/2017.
  */
-
 public class Camera {
     private static final String TAG = Camera.class.getName();
 
@@ -19,21 +14,18 @@ public class Camera {
     private Vector3f center;
     private Vector3f up;
     private float mAngle;
+    private float scale = 1.0f;
+    private float fovY = 50.0f;
 
     // Perspective/frustum
     private ViewFrame frame;
     private float nearPlane = 1.0f;
-    private float farPlane = 1000.0f;
+    private float farPlane = 100000.0f;
 
     // Matrices
     private final float[] mViewMatrix = new float[16];
     private final float[] mProjectionMatrix = new float[16];
     private final float[] mRotationMatrix = new float[16];
-
-    // Touch support
-    private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
-    private float mPreviousX;
-    private float mPreviousY;
 
     private GLSurfaceView view;
 
@@ -41,8 +33,8 @@ public class Camera {
 
         this.view = view;
 
-        position = new Vector3f(0, -100, 300);
-        center = new Vector3f(0, 300, 150);
+        position = new Vector3f(0, 0, 2000);
+        center = new Vector3f(0, 100, 1800);
         up = new Vector3f(0, 0, 1);
 
         frame = new ViewFrame(-1, 1, -1, 1);
@@ -75,14 +67,34 @@ public class Camera {
         frame.setLeft(-ratio);
         frame.setRight(ratio);
 
+        updateFrustum();
+    }
+
+    private void updateFrustum() {
         // this projection matrix is applied to object coordinates in the onDrawFrame() method
-        Matrix.frustumM(mProjectionMatrix, 0,
-                frame.getLeft(), frame.getRight(), frame.getBottom(), frame.getTop(),
-                nearPlane, farPlane);
+//        Matrix.frustumM(mProjectionMatrix, 0,
+//                scale * frame.getLeft(), scale * frame.getRight(), scale * frame.getBottom(), scale * frame.getTop(),
+//                nearPlane, farPlane);
+        Matrix.perspectiveM(mProjectionMatrix, 0, fovY, frame.getRight(), nearPlane, farPlane);
     }
 
     public void translate(Vector3f v) {
+        v.scale(5);
         position.add(v);
         center.add(v);
+    }
+
+    public void scale(float factor) {
+        fovY = clamp(factor * fovY, 10, 90);
+        //Log.d(TAG, String.valueOf(fovY));
+        updateFrustum();
+    }
+
+    public static float clamp(float val, float min, float max) {
+        return Math.max(min, Math.min(max, val));
+    }
+
+    public Vector3f getPosition() {
+        return position;
     }
 }

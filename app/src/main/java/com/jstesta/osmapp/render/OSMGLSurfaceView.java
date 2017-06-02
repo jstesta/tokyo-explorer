@@ -20,7 +20,7 @@ public class OSMGLSurfaceView extends GLSurfaceView {
 
     private HGTMap map;
     private Camera camera;
-    private GestureDetectorCompat mDetector;
+    private InputManager inputManager;
 
     public OSMGLSurfaceView(Context context){
         super(context);
@@ -34,14 +34,14 @@ public class OSMGLSurfaceView extends GLSurfaceView {
 
         mRenderer = new OSMGLRenderer(camera, map);
 
+        inputManager = new InputManager(context, mRenderer, camera);
+
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(mRenderer);
-
-        mDetector = new GestureDetectorCompat(context, new InputManager(mRenderer, camera));
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent e) {
-        return this.mDetector.onTouchEvent(e);
+        return this.inputManager.onTouchEvent(e);
     }
 }

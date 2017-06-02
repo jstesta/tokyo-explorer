@@ -23,7 +23,7 @@ class HGTLoader {
     private static final String TAG = HGTLoader.class.getName();
 
     private static final int BYTES_PER_VALUE = 2;
-    private static final int DIM = 1201;
+    protected static final int DIM = 1201;
     private static final int FILE_LEN = DIM * DIM * BYTES_PER_VALUE;
 
     static short[] load(Context c, int id) {
