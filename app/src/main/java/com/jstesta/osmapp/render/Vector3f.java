@@ -2,15 +2,19 @@ package com.jstesta.osmapp.render;
 
 import java.util.Arrays;
 
-/**
- * Created by joseph.testa on 5/19/2017.
- */
-
 public class Vector3f {
     final float[] vector;
 
+    public Vector3f(float[] v) {
+        vector = new float[]{v[0], v[1], v[2]};
+    }
+
     public Vector3f(float x, float y, float z) {
         vector = new float[]{x, y, z};
+    }
+
+    public Vector3f(Vector3f position) {
+        vector = new float[]{position.getX(), position.getY(), position.getZ()};
     }
 
     public float getX() {
@@ -47,6 +51,14 @@ public class Vector3f {
         vector[0] += v.getX();
         vector[1] += v.getY();
         vector[2] += v.getZ();
+    }
+
+    public Vector3f plus(Vector3f v) {
+        return new Vector3f(vector[0] + v.getX(), vector[1] + v.getY(), vector[2] + v.getZ());
+    }
+
+    public Vector3f minus(Vector3f v) {
+        return new Vector3f(vector[0] - v.getX(), vector[1] - v.getY(), vector[2] - v.getZ());
     }
 
     @Override

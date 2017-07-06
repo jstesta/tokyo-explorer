@@ -2,17 +2,12 @@ package com.jstesta.osmapp.render;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
-import android.support.v4.view.GestureDetectorCompat;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import com.jstesta.osmapp.R;
 import com.jstesta.osmapp.data.elevation.HGTMap;
 import com.jstesta.osmapp.input.InputManager;
-import com.jstesta.osmapp.render.OSMGLRenderer;
-
-/**
- * Created by joseph.testa on 5/16/2017.
- */
 
 public class OSMGLSurfaceView extends GLSurfaceView {
 
@@ -22,7 +17,7 @@ public class OSMGLSurfaceView extends GLSurfaceView {
     private Camera camera;
     private InputManager inputManager;
 
-    public OSMGLSurfaceView(Context context){
+    public OSMGLSurfaceView(Context context) {
         super(context);
 
         camera = new Camera(this);
@@ -34,14 +29,22 @@ public class OSMGLSurfaceView extends GLSurfaceView {
 
         mRenderer = new OSMGLRenderer(camera, map);
 
-        inputManager = new InputManager(context, mRenderer, camera);
+        inputManager = new InputManager(this, context, mRenderer, camera);
 
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(mRenderer);
+
+        this.requestFocus();
+        this.setFocusableInTouchMode(true);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent e) {
         return this.inputManager.onTouchEvent(e);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        return inputManager.onKeyDown(keyCode, event);
     }
 }

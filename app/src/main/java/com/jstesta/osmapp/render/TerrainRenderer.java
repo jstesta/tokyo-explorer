@@ -1,39 +1,24 @@
-package com.jstesta.osmapp.render.terrain;
+package com.jstesta.osmapp.render;
 
 import android.opengl.GLES20;
 
 import com.jstesta.osmapp.data.elevation.HGTMap;
-import com.jstesta.osmapp.render.AABB;
-import com.jstesta.osmapp.render.OSMGLRenderer;
-import com.jstesta.osmapp.render.Point;
-import com.jstesta.osmapp.render.Vector3f;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 
-/**
- * Created by joseph.testa on 5/29/2017.
- */
-
 public class TerrainRenderer {
-    private static final String TAG = TerrainRenderer.class.getName();
-
-    private static final int RESOLUTION = 3;
-    private static final float ARC_SECOND_METERS = 30.87f;
-    private static final float SCALE = ARC_SECOND_METERS * RESOLUTION;
-
-    private static final int CAPACITY = 4;
-
     // number of coordinates per vertex in this array
     static final int COORDS_PER_VERTEX = 3;
     static final int VERTEX_STRIDE = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
-
+    private static final String TAG = TerrainRenderer.class.getName();
+    private static final int RESOLUTION = 3;
+    private static final float ARC_SECOND_METERS = 30.87f;
+    private static final float SCALE = ARC_SECOND_METERS * RESOLUTION;
     // =======================================
     // Shaders for terrain rendering
     // =======================================
@@ -41,20 +26,35 @@ public class TerrainRenderer {
             // This matrix member variable provides a hook to manipulate
             // the coordinates of the objects that use this vertex shader
             "uniform mat4 uMVPMatrix;" +
-            "attribute vec4 vPosition;" +
-            "void main() {" +
-            // The matrix must be included as a modifier of gl_Position.
-            // Note that the uMVPMatrix factor *must be first* in order
-            // for the matrix multiplication product to be correct.
-            "  gl_Position = uMVPMatrix * vPosition;" +
-            "}";
+                    "attribute vec4 vPosition;" +
+                    "varying vec4 vColorA;" +
+                    "uniform float maxZ;" +
+                    "void main() {" +
+                    // The matrix must be included as a modifier of gl_Position.
+                    // Note that the uMVPMatrix factor *must be first* in order
+                    // for the matrix multiplication product to be correct.
+                    "  gl_Position = uMVPMatrix * vPosition;" +
+                    "  float snowZ = maxZ * 0.75;" +
+                    "  float dirtZ = maxZ * 0.05;" +
+                    "  float waterZ = 0.0;" +
+                    "  if (vPosition.z <= waterZ) {" +
+                    "    vColorA = vec4(0.0, 0.0, 0.4, 1.0);" +
+                    "  } else if (vPosition.z > snowZ) {" +
+                    "    vColorA = vec4(vPosition.z/maxZ, vPosition.z/maxZ, vPosition.z/maxZ, 1.0);" +
+                    "  } else if (vPosition.z < dirtZ) {" +
+                    "    vColorA = vec4((vPosition.z/maxZ)+0.6, (vPosition.z/maxZ)+0.3, 0.1, 1.0);" +
+                    "  } else {" +
+                    "    vColorA = vec4(0.1, (vPosition.z/maxZ)+0.3, 0.0, 1.0);" +
+                    "  }" +
+                    "}";
 
     private final String fragmentShaderCode =
             "precision mediump float;" +
-            "uniform vec4 vColor;" +
-            "void main() {" +
-            "  gl_FragColor = vColor;" +
-            "}";
+                    "uniform vec4 vColor;" +
+                    "varying vec4 vColorA;" +
+                    "void main() {" +
+                    "  gl_FragColor = vColorA;" +
+                    "}";
 
     private HGTMap m;
     private int mProgram = Integer.MIN_VALUE;
@@ -99,6 +99,7 @@ public class TerrainRenderer {
 
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram);
+        OSMGLRenderer.checkGlError("glUseProgram");
 
         // get handle to shape's transformation matrix
         int mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
@@ -386,6 +387,10 @@ public class TerrainRenderer {
         indexBuffer.put(indices);
         indexBuffer.position(0);
 
+        int mMaxZHandle = GLES20.glGetUniformLocation(mProgram, "maxZ");
+        OSMGLRenderer.checkGlError("glGetUniformLocation");
+        GLES20.glUniform1f(mMaxZHandle, m.getMaxHeight());
+
         // get handle to vertex shader's vPosition member
         int mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
         OSMGLRenderer.checkGlError("glGetAttribLocation");
@@ -400,23 +405,6 @@ public class TerrainRenderer {
                 GLES20.GL_FLOAT, false,
                 VERTEX_STRIDE, vertexBuffer);
         OSMGLRenderer.checkGlError("glVertexAttribPointer");
-
-        // get handle to fragment shader's vColor member
-        int mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
-        OSMGLRenderer.checkGlError("glGetUniformLocation");
-
-        float avgHeight = 0;
-        for (int i = 1; i <= vertexCount; i++) {
-            avgHeight += coords[(i * 3) - 1];
-        }
-        avgHeight /= vertexCount;
-
-        // Set color with red, green, blue and alpha (opacity) values
-        float color[] = {.1f, avgHeight / m.getMaxHeight(), .1f, 1};
-
-        // Set color for drawing the triangle
-        GLES20.glUniform4fv(mColorHandle, 1, color, 0);
-        OSMGLRenderer.checkGlError("glUniform4fv");
 
         // Draw the triangle
         GLES20.glDrawElements(GLES20.GL_TRIANGLE_FAN, vertexCount, GLES20.GL_UNSIGNED_SHORT, indexBuffer);

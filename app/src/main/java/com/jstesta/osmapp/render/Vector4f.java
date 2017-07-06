@@ -2,10 +2,6 @@ package com.jstesta.osmapp.render;
 
 import java.util.Arrays;
 
-/**
- * Created by joseph.testa on 5/19/2017.
- */
-
 public class Vector4f extends Vector3f {
     private float w;
 

@@ -1,9 +1,5 @@
 package com.jstesta.osmapp.render;
 
-/**
- * Created by joseph.testa on 5/22/2017.
- */
-
 public class Point {
     protected final int x;
     protected final int y;

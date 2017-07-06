@@ -4,9 +4,6 @@ import com.jstesta.osmapp.data.elevation.HGTMap;
 
 import java.util.HashMap;
 
-/**
- * Created by joseph.testa on 5/22/2017.
- */
 public class QuadTree {
     private static final String TAG = QuadTree.class.getName();
 
@@ -78,14 +75,21 @@ public class QuadTree {
     }
 
     private float getMaxDh() {
+        float max = 0;
         float dh1 = Math.abs(((getNW() + getNE()) / 2f) - getN());
+        max = dh1 > max ? dh1 : max;
         float dh2 = Math.abs(((getNE() + getSE()) / 2f) - getE());
+        max = dh2 > max ? dh2 : max;
         float dh3 = Math.abs(((getSE() + getSW()) / 2f) - getS());
+        max = dh3 > max ? dh3 : max;
         float dh4 = Math.abs(((getSW() + getNW()) / 2f) - getW());
+        max = dh4 > max ? dh4 : max;
         float dh5 = Math.abs(((getNW() + getSE()) / 2f) - getC());
+        max = dh5 > max ? dh5 : max;
         float dh6 = Math.abs(((getNE() + getSW()) / 2f) - getC());
+        max = dh6 > max ? dh6 : max;
 
-        return Math.max(dh1, Math.max(dh2, Math.max(dh3, Math.max(dh4, Math.max(dh5, dh6)))));
+        return max;
     }
 
     private float getDistanceFromCamera(Camera c) {

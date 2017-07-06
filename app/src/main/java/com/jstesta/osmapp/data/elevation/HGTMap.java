@@ -11,7 +11,10 @@ import com.jstesta.osmapp.render.Vector3f;
  */
 
 public class HGTMap {
+
     private static final String TAG = HGTMap.class.getName();
+
+    private static final boolean FLAT_MODE = false;
 
     public static final float UNIT_OF_MEASURE = 90.0f;
 
@@ -22,13 +25,17 @@ public class HGTMap {
     private static final int ZERO_BOUND = SAMPLE;
 
     private short[] map;
-
     private float maxHeight;
+    private int latitude;
+    private int longitude;
 
     /**
      * Takes a DIMxDIM slice of the supplied oMap
      */
-    private HGTMap(short[] oMap) {
+    private HGTMap(short[] oMap, int latitude, int longitude) {
+
+        this.latitude = latitude;
+        this.longitude = longitude;
 
         int skip = HGTLoader.DIM - BOUND;
 
@@ -40,6 +47,10 @@ public class HGTMap {
         for (int y = 0; y < BOUND; y++) {
             for (int x = 0; x < BOUND; x++) {
                 short h = oMap[oIndex++];
+
+                if (FLAT_MODE) {
+                    h = 0;
+                }
 
                 // Set data voids to height = 0
                 if (h == Short.MIN_VALUE) {
@@ -99,7 +110,7 @@ public class HGTMap {
 
     public static HGTMap create(Context c, int resource) {
         short[] map = HGTLoader.load(c, resource);
-        return new HGTMap(map);
+        return new HGTMap(map, 35, 139);
     }
 
     public static Vector3f getWorldCoordinate(HGTMap m, int x, int y) {
@@ -126,5 +137,13 @@ public class HGTMap {
 
     public boolean pointIsInBounds(int x, int y) {
         return ! ((x < 0 || x > ZERO_BOUND) || (y < 0 || y > ZERO_BOUND));
+    }
+
+    public int getLatitude() {
+        return latitude;
+    }
+
+    public int getLongitude() {
+        return longitude;
     }
 }
